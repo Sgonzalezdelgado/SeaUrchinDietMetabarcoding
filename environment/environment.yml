@@ -1,0 +1,25 @@
+name: r-stats
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3
+  - r-vegan
+  - r-permute
+  - r-lme4
+  - r-lmertest
+  - r-emmeans
+  - r-car
+  - r-indicspecies
+  - bioconductor-phyloseq
+  - r-dplyr
+  - r-tidyr
+  - r-tibble
+  - r-stringr
+  - r-readr
+  - r-ggplot2
+  - r-patchwork
+  - r-scales
+  - r-rcolorbrewer
+  - bioconductor-decontam
+  - bioconductor-biostrings
