@@ -222,7 +222,6 @@ for (sp_label in names(ps_list)) {
 
 ##---- 3. ALPHA DIVERSITY (LMM) ---------------------------------
 ## Riqueza ~ pH + (1|Locality)
-## Pairwise emmeans con FDR correction
 ## ---------------------------------------------------------------
 cat("\n=== 3. Alpha diversity — LMM ===\n")
  
@@ -230,10 +229,9 @@ sink(file.path(OUTDIR, "Stats_alpha_LMM.txt"))
 cat("=== ALPHA DIVERSITY: Observed OTU richness ===\n")
 cat("Rarefaction to", min_reads, "reads\n")
 cat("Model: Richness ~ pH_condition + (1|Locality)\n")
-cat("Pairwise: emmeans FDR correction\n\n")
 sink()
  
-## ---- 3a. ALPHA DIVERSITY — ESTADÍSTICA (LMM + pairwise) ----
+## ---- 3a. ALPHA DIVERSITY — ESTADÍSTICA (LMM) ----
  
 run_alpha_stats <- function(sp_label) {
   
@@ -280,19 +278,6 @@ run_alpha_stats <- function(sp_label) {
   cat("\n--- LMM: Richness ~ Condition + (1|Locality) ---\n")
   print(summary(lmm))
   print(anova(lmm, ddf = "Kenward-Roger"))
-  
-  # ---- Pairwise Condition via emmeans sobre LMM (FDR) ----
-  emm_cond <- emmeans(lmm, specs = "Condition_f")
-  pw_cond  <- pairs(emm_cond, adjust = "fdr")
-  cat("\n--- Pairwise pH conditions (FDR) ---\n")
-  print(summary(pw_cond))
-  
-  # ---- Pairwise localidades via LM fijo (FDR) ----
-  # emmeans no puede estimar medias de efectos aleatorios
-  lm_fix  <- lm(Observed ~ Condition_f + Locality_f, data = alpha_df)
-  emm_loc <- emmeans(lm_fix, specs = "Locality_f")
-  pw_loc  <- pairs(emm_loc, adjust = "fdr")
-  cat("\n--- Pairwise localities (FDR) ---\n")
   print(summary(pw_loc))
   
   # ---- Guardar stats ----
@@ -302,19 +287,14 @@ run_alpha_stats <- function(sp_label) {
   print(summary(lmm))
   cat("\n--- ANOVA (Kenward-Roger) ---\n\n")
   print(anova(lmm, ddf = "Kenward-Roger"))
-  cat("\n--- Pairwise pH conditions (emmeans FDR) ---\n\n")
-  print(summary(pw_cond))
-  cat("\n--- Pairwise localities (emmeans FDR) ---\n\n")
-  print(summary(pw_loc))
   sink()
   
   list(
     sp_label = sp_label, sp_name = sp_name,
-    alpha_df = alpha_df, lmm = lmm,
-    pw_cond = pw_cond, pw_loc = pw_loc
+    alpha_df = alpha_df, lmm = lmm
   )
 }
- 
+
  
 ## ---- 3b. ALPHA DIVERSITY — GRÁFICO (boxplot por localidad) ----
  
