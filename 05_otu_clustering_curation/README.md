@@ -43,7 +43,6 @@ the similarity values in `match_df` are scaled 0–1, not 0–100. Using the
 default here would silently reject every match.
 
 ### Result
-- Original (buggy `lulu()`): 32,993 → 32,993 OTUs (0 merged)
 - Corrected (`lulu2()`): 32,993 → **30,386 OTUs** (2,607 merged as artefacts)
 
 ## Output
