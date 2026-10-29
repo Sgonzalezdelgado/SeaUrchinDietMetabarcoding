@@ -6,7 +6,7 @@
 #
 # OUTPUTS:
 #   phyloseq_OTU97_LULU_e20_EUK_KKE_curated.rds         ← OTU-level, ALL localities
-#   phyloseq_OTU97_LULU_e20_EUK_KKE_curated_speciesGlom.rds  ← species-level ⭐ USE THIS
+#   phyloseq_OTU97_LULU_e20_EUK_KKE_curated_speciesGlom.rds  ← species-level 
 #   OTUs_removed_log.csv                                 ← all removed OTUs with reason
 #   supplementary_OTU_table.csv                          ← full OTU table for SI
 #
