@@ -8,12 +8,10 @@
 # INPUT:  exported OTU/ASV table with sample columns in a known range
 # OUTPUT: renormalized table, feeding into 03_otu_clustering_curation
 #
-# -c : cumulative frequency cutoff (the only scientifically meaningful
-#      parameter here — report this one in Methods)
+# -c : cumulative frequency cutoff 
 # -s / -e : start/end column of sample data in the input table (indexing
-#      detail, not a method parameter). Confirmed here as 2-171, matching
-#      the 170 samples in ASVtable_decontam_true_e20.tsv. If you re-export
-#      the table with a different column layout, update these.
+#      detail, not a method parameter) - 2-171, matching
+#      the 170 samples in ASVtable_decontam_true_e20.tsv.
 
 Rscript owi_renormalize.R \
   -i ASVtable_decontam_true_e20.tsv \
