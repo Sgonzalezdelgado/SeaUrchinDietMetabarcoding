@@ -2,12 +2,12 @@
 
 Code and analysis pipeline for the diet metabarcoding study of two sea urchin
 species (*Arbacia lixula* and *Paracentrotus lividus*) across ambient and
-naturally CO₂-acidified (vent) localities, in La Palma (Canary Islands) and
+naturally CO2-acidified (vent) localities, in La Palma (Canary Islands) and
 Blanes (NW Mediterranean, methodological validation site).
 
 This repository accompanies the manuscript:
 
-> [Authors]. [Year]. [Title]. *Journal* (in prep). DOI: TBD
+> González-Delgado, S., Hernández, J. C., Pérez-Portela, R., Arranz, V. [Year]. Non-invasive DNA metabarcoding reveals distinct diets in two sympatric sea urchins across natural acidified systems. *Journal* (in prep). DOI: TBD
 
 Real locality names and exact coordinates are
 reported only in the manuscript's.
