@@ -56,7 +56,7 @@ and the exact commit used are in `05_otu_clustering_curation/README.md`.
 
 ## Data availability
 
-Raw sequencing reads: deposited in ENA/SRA under accession `[TBD]`.
+Raw sequencing reads: deposited in SRA under accession `[TBD]`.
 This repository contains code only — no raw sequence data.
 
 ## Reproducing this pipeline
@@ -67,8 +67,7 @@ file without re-running everything from raw reads.
 
 ## Citation
 
-If you use this code, please cite the manuscript above and, if relevant,
-this repository's Zenodo DOI: `[TBD]`.
+If you use this code, please cite the manuscript above.
 
 ## License
 
