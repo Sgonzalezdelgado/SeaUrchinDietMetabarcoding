@@ -7,14 +7,6 @@
 # minimum_relative_cooccurence value supplied.
 #
 # Source: https://github.com/jesuszarcero/LULU_corrected
-# (only the function definition is kept here — the original file also
-# contains the author's own example run, which is not needed and will
-# error out if sourced as-is on a different machine.)
-#
-# Same argument signature as the original lulu(). IMPORTANT: if your
-# match list similarity column is scaled 0-1 (not 0-100), pass
-# minimum_match on the same 0-1 scale explicitly — the default (84)
-# assumes a 0-100 scale and will silently reject every match otherwise.
 # ══════════════════════════════════════════════════════════════════════════
 
 library(dplyr)
