@@ -7,7 +7,7 @@ using **QIIME2 2022.11** and the latest release of the
 database at the time (`MARES_NOBAR_16Jan2023`).
 
 ## Input
-- Raw paired-end FASTQ files (ENA/SRA accession `[TBD]`), two lanes per
+- Raw paired-end FASTQ files, two lanes per
   sample, concatenated before import (see `01_import_and_concatenate.sh`).
 
 ## Steps
