@@ -17,8 +17,7 @@ overlap. Venn diagrams in O1 are hand-built with `ggplot2`
 
 ## Note
 Alpha diversity: test pH condition while accounting for locality as a random effect.
-Beta diversity: test locality only, as condition-level permutations are not robust with 
-only five independent localities (two vent and three ambient).
+Beta diversity: test locality only, as condition-level permutations are not robust.
 
 ## Input
 - Final curated phyloseq object from `06_taxonomic_curation/`
