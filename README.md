@@ -68,7 +68,3 @@ file without re-running everything from raw reads.
 ## Citation
 
 If you use this code, please cite the manuscript above.
-
-## License
-
-[MIT / GPL-3 — choose one when creating the GitHub repo]
