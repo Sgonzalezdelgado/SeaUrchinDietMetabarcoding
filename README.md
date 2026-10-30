@@ -56,7 +56,7 @@ and the exact commit used are in `05_otu_clustering_curation/README.md`.
 
 ## Data availability
 
-Raw sequencing reads: deposited in SRA under accession `[TBD]`.
+Raw sequencing reads: deposited in SRA under accession `PRJNA1552446`.
 This repository contains code only — no raw sequence data.
 
 ## Reproducing this pipeline
