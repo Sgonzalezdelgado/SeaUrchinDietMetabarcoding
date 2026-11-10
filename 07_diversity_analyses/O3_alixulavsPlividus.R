@@ -15,13 +15,14 @@ library(patchwork)
 
 setwd(".")  # set to your working directory containing the final curated phyloseq object
 
-OUTDIR <- "Objetivo3"
+permutest_s <- function(...) { set.seed(42); vegan::permutest(...) }  # reproducible betadisper tests
+OUTDIR <- "Objetivo3_water_microdecon"
 dir.create(OUTDIR, showWarnings = FALSE)
 
 ## ---- 1. CARGA Y FILTROS -----------------------------------------------------
 cat("\n=== 1. Carga y filtros ===\n")
 
-ps_full <- readRDS("phyloseq_OTU97_LULU_e20_EUK_KKE_curated_speciesGlom.rds")
+ps_full <- readRDS("phyloseq_OTU97_LULU_e20_EUK_KKE_curated_waterFiltered_microdecon_speciesGlom.rds")
 
 sd_all <- as.data.frame(sample_data(ps_full))
 
@@ -63,8 +64,7 @@ if (sum(host_idx) > 0) {
 
 ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 
-# Renombrar Transition Faro -> Los Porretos  y  Transition -> Vent
-# (por si quedó alguna etiqueta residual)
+# por si quedó alguna etiqueta residual
 sd_fix <- as.data.frame(sample_data(ps))
 sd_fix[[loc_col]]  <- gsub("Transition Faro|Transicion Faro",
                            "Los Porretos", sd_fix[[loc_col]])
@@ -294,7 +294,7 @@ run_permanova_global <- function(beta) {
   
   set.seed(42)
   perm_int <- adonis2(
-    jac ~ Species_mod * Locality_mod,
+    beta$jac ~ Species_mod * Locality_mod,
     data = beta$perm_df, permutations = 999, by = "terms"
   )
   rownames(perm_int) <- gsub("Species_mod",  "Species",  rownames(perm_int))
@@ -313,12 +313,12 @@ run_betadisper_global <- function(beta) {
   
   cat("\n--- Beta dispersion ~ Localidad ---\n")
   bd      <- betadisper(beta$jac, group = beta$perm_df[[loc_col]])
-  bd_test <- permutest(bd, permutations = 999)
+  bd_test <- permutest_s(bd, permutations = 999)
   print(bd_test)
   
   cat("\n--- Beta dispersion ~ Especie ---\n")
   bd_sp      <- betadisper(beta$jac, group = beta$perm_df[[sp_col]])
-  bd_sp_test <- permutest(bd_sp, permutations = 999)
+  bd_sp_test <- permutest_s(bd_sp, permutations = 999)
   print(bd_sp_test)
   
   capture.output({
@@ -353,7 +353,7 @@ run_permanova_by_locality <- function(beta) {
     set.seed(42)
     res    <- adonis2(sub_dist ~ Species_mod, data = sub_df, permutations = 999)
     bd_loc <- betadisper(sub_dist, group = sub_df[[sp_col]])
-    bd_p   <- permutest(bd_loc, permutations = 999)$tab$`Pr(>F)`[1]
+    bd_p   <- permutest_s(bd_loc, permutations = 999)$tab$`Pr(>F)`[1]
     
     perm_loc_res <- rbind(perm_loc_res, data.frame(
       Locality        = loc,
@@ -362,7 +362,7 @@ run_permanova_by_locality <- function(beta) {
       R2              = round(res$R2[1], 4),
       F_stat          = round(res$F[1],  4),
       p_value         = round(res$`Pr(>F)`[1], 4),
-      betadisper_F    = round(permutest(bd_loc, permutations = 999)$tab$F[1], 3),
+      betadisper_F    = round(permutest_s(bd_loc, permutations = 999)$tab$F[1], 3),
       betadisper_p    = round(bd_p, 4)
     ))
   }
