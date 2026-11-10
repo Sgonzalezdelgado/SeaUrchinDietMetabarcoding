@@ -1,22 +1,20 @@
-# 06 — Taxonomic assignment and dietary curation
+# 06 — Taxonomic assignment, dietary curation and seawater decontamination
 
 ## Steps
-1. Taxonomic assignment with MEGAN6 (min score 98, max expected 1×10⁻⁸,
-   min identity 80%, top 10%)
-2. Restriction to Eukaryota.
-3. **Rule-based curation** (`precuration.R`, 29 documented steps): removes
-   terrestrial, freshwater, parasitic, out-of-range, and lab-contaminant
-   taxa by phylum/genus/species-specific rules. Not manual clicking —
-   fully scripted, so re-running it on a new input table is mechanical.
-   Host reads (*A. lixula* / *P. lividus*) are **not** removed at this
-   step; they're stripped later, per-objective, in `07_diversity_analyses/`
-4. Species-level collapse (`tax_glom`) of OTUs sharing the same taxonomic
-   assignment.
+| Script | What it does |
+|---|---|
+| `precuration.R` | Eukaryote restriction and rule-based dietary curation (documented steps). Writes the removal log and the supplementary OTU table and collapses OTUs to species level. |
+| `water_microdecon.R` | **Main seawater decontamination.** Uses the seawater samples (tissue `W`) as blanks in microDecon (McKnight et al. 2019, *Environmental DNA* 1:14–25). |
+| `water_overlap_filter.R` | Sensitivity analysis only (`MODE = "presence"` removes every OTU found in the paired water). Not used for the main results. |
 
 ## Input
-- `phyloseq_OTU97_LULU_e20.rds` (corrected, 30,386 OTUs — from step 05)
+- `phyloseq_OTU97_LULU_e20.rds` (from step 05; includes faeces, stomachs and seawater)
 
 ## Output
-- Final phyloseq object used for all diversity analyses (Objectives 1–3):
-  3,686 OTUs / 838 species-level taxa / 141 KK+E samples (La Palma) after
-  further per-objective filtering in `07_diversity_analyses/`.
+| File | Used by |
+|---|---|
+| `phyloseq_OTU97_LULU_e20_EUK_KKE_curated.rds` | `water_microdecon.R` |
+| `phyloseq_OTU97_LULU_e20_EUK_KKE_curated_speciesGlom.rds` | `O1_KKvsE.R` (Blanes) |
+| `..._curated_waterFiltered_microdecon.rds` | — (OTU level, archived) |
+| `..._curated_waterFiltered_microdecon_speciesGlom.rds` | `O2_VentvsAmbient.R`, `O3_alixulavsPlividus.R` |
+| `microdecon_*.csv`, `S1_*.csv` | Supplementary Tables S1 and S11 |
