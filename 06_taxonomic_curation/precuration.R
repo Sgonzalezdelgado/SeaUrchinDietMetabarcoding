@@ -36,11 +36,11 @@
 #   22 Remove genera with no marine species
 #   23 Remove specific freshwater/terrestrial species
 #   24 Remove BLAST-verified bad assignments
-#   25 Remove species outside geographic range (EXPANDED — new round)
-#   26 Species degradations to genus sp. (EXPANDED — new round)
+#   25 Remove species outside geographic range 
+#   26 Species degradations to genus sp.
 #   27 Summary + save OTU-level object + removal log
 #   28 Build supplementary OTU table (SI)
-#   29 Species glom → save final species-level object ⭐
+#   29 Species glom → save final species-level object
 # ══════════════════════════════════════════════════════════════════════════════
 
 library(phyloseq)
@@ -446,6 +446,33 @@ ps_before <- ps
 ps <- subset_taxa(ps, is.na(Genus) | !Genus %in% c("Bathycoccus", "Micromonas"))
 ps <- prune_taxa(taxa_sums(ps) > 0, ps)
 log_removed(ps_before, ps, "Mamiellophyceae picoplankton: Bathycoccus + Micromonas eliminated (not diet items)")
+cat("  Taxa:", ntaxa(ps), "\n")
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STEP 21b — Siphonophorae: remove all (holoplanktonic, not diet items)
+# ══════════════════════════════════════════════════════════════════════════════
+cat("STEP 21b — Siphonophorae: remove all (holoplanktonic)\n")
+sip_S1 <- c(
+  "dd6473d38afde4dbde3b7e1db0ee6abe", "1ec906150dfd74886627daf9c242e5a7",
+  "e9fe988b7f592569d70279e37f4ffdaa", "02cb4ac446a514cf4e28a7151a42fb28",
+  "81ef7053c2bef2388aecb8204d32ce49", "7280d16a5f4f9528b145c4131f9f03fd",
+  "55899051a07d98f2cfcc1321a6e28a69", "6fa2f1535b06735dc283cc4606561059",
+  "bcaeb74d06fa8e406a52d76cb5a7a99a", "283a67526b4d6419d9c233f62a711e87",
+  "80295832d576ad894f2c8deada3a7e82", "b54e04e56e8395eacbe09e2414ae7b00",
+  "cffd6756964126b48b66ff9a3fc93dc1", "95bb9cd5123af8cfe57af933c819dbd5",
+  "07349ec934caa4c5fc18e07c0925d290", "a10d3842f6fd1df174e049d2c39581cc",
+  "1ec61b23b41abbd1083abfb2696e500d", "9abc7ee597bb19b56505c3fb4146d6a7",
+  "cf5a779d35535447de6cb5c9bd93f220", "3704b84dedcc4491405f7e123f7bf30d",
+  "b12c4e67d5de61e5259814fa3d07341d", "d7af17b066943ecfad567e49690816b6",
+  "eea430da35ac693d54516b17e3074521", "ccd17fc5e17b167f9d0fdf077278898d",
+  "b501fcdcfb3c67c85ae9a89b43b1f65b", "21fbf9f169b596e28b0e54f4569a4189",
+  "2462dbff24b554bba942fa0f5cae95e6", "f45ea63e9b4d0c051f9348b7489a667d",
+  "10e5866c65cabb6785d8306de6ac2e6a", "a2722a7e556d0d9ab2ad1ac292bb747b")
+ps_before <- ps
+tax_21b <- as.data.frame(tax_table(ps))
+ps <- prune_taxa(!(taxa_names(ps) %in% sip_S1 | tax_21b$Order %in% "Siphonophorae"), ps)
+ps <- prune_taxa(taxa_sums(ps) > 0, ps)
+log_removed(ps_before, ps, "Siphonophorae: holoplanktonic, no benthic stage (not diet items)")
 cat("  Taxa:", ntaxa(ps), "\n")
 
 # ══════════════════════════════════════════════════════════════════════════════
