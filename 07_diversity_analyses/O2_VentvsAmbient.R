@@ -3,13 +3,16 @@
 ###   0. Setup
 ###   1. Load & filter (host + Echinodermata removed, Los Porretos excluded)
 ###   2. Rarefaction curve (min_reads = 5000)
-###   3. Alpha diversity (LMM) -> Table S5, Fig. 3A
+###   3. Alpha diversity (LMM) -> Table S4, Fig. 3A
 ###   4. Beta diversity, PCoA panel -> Fig. 3C-D
-###   4b. PERMANOVA by Condition/Locality -> Table S6A-C
-###   5. PERMANOVA by Phylum + Family (FDR) -> Table S7
+###   4b. PERMANOVA by Condition/Locality -> Table S5A-C
+###   5. PERMANOVA by Phylum + Family (FDR) -> Table S6
 ###   7. IndVal.g by locality (mixed-rank: species > genus > family > phylum,
 ###      whichever is most resolved per taxon) + dotplot coloured by
-###      locality -> Fig. 4, Table S8
+###      locality -> Fig. 4, Table S7
+###
+### NEW Input: seawater-decontaminated object (microDecon, water_microdecon.R).
+### Taxon labels in IndVal outputs are taken from the BLAST-curated
 ###
 ## ---- 0. SETUP -----------------------------------------------
 
@@ -18,7 +21,7 @@ setwd(".")  # set to your working directory containing the final curated phylose
 pkgs_cran <- c("vegan", "ggplot2", "dplyr", "tidyr", "stringr",
                "tibble", "scales", "patchwork", "lme4", "lmerTest",
                "emmeans", "car", "indicspecies",
-               "RColorBrewer")
+               "RColorBrewer", "readxl")
 pkgs_bio  <- c("phyloseq", "Biostrings")
 
 for (p in pkgs_cran) {
@@ -30,7 +33,10 @@ for (p in pkgs_bio) {
 }
 invisible(lapply(c(pkgs_cran, pkgs_bio), library, character.only = TRUE))
 
-OUTDIR <- "Objetivo2_v3"
+# Reproducible permutation tests for betadisper (permutest has no seed argument)
+permutest_s <- function(...) { set.seed(42); vegan::permutest(...) }
+
+OUTDIR <- "Objetivo2_water_microdecon"
 dir.create(OUTDIR, showWarnings = FALSE)
 cat("Outputs en:", file.path(getwd(), OUTDIR), "\n")
 
@@ -39,7 +45,7 @@ cat("Outputs en:", file.path(getwd(), OUTDIR), "\n")
 cat("\n=== 1. Carga y filtros ===\n")
 
 # Dataset nuevo: ya colapsado por especie, solo Eukariota, KK + E curados
-ps_full <- readRDS("phyloseq_OTU97_LULU_e20_EUK_KKE_curated_speciesGlom.rds")
+ps_full <- readRDS("phyloseq_OTU97_LULU_e20_EUK_KKE_curated_waterFiltered_microdecon_speciesGlom.rds")
 cat("Phyloseq cargado:\n"); print(ps_full)
 
 # -- Detectar columnas de metadata -----------------------------------
@@ -93,6 +99,11 @@ if (sum(host_idx) > 0) {
   cat("Sin OTUs host/Echinodermata en dataset.\n")
 }
 ps <- prune_taxa(taxa_sums(ps) > 0, ps)
+
+# -- 1f) Control: Siphonophorae must already be removed (precuration Step 21b)
+n_siph <- sum(as.data.frame(tax_table(ps))$Order %in% "Siphonophorae")
+if (n_siph > 0) stop("Siphonophorae still present (", n_siph,
+                     " taxa). Rerun precuration.R and water_microdecon.R first.")
 cat("\n=== Objeto tras filtros iniciales ===\n"); print(ps)
 
 # -- Distribución -------------------------------------------------
@@ -278,7 +289,6 @@ run_alpha_stats <- function(sp_label) {
   cat("\n--- LMM: Richness ~ Condition + (1|Locality) ---\n")
   print(summary(lmm))
   print(anova(lmm, ddf = "Kenward-Roger"))
-  print(summary(pw_loc))
   
   # ---- Guardar stats ----
   sink(file.path(OUTDIR, "Stats_alpha_LMM.txt"), append = TRUE)
@@ -457,11 +467,11 @@ run_beta_stats <- function(sp_label) {
   
   # ---- Betadisper ------------------------------------------------
   disp_cond     <- betadisper(jac, sd_sp[[cond_col]])
-  disp_test     <- permutest(disp_cond, permutations = 999)
+  disp_test     <- permutest_s(disp_cond, permutations = 999)
   cat("\n--- PERMDISP by Condition ---\n"); print(disp_test)
   
   disp_loc      <- betadisper(jac, sd_sp[[loc_col]])
-  disp_loc_test <- permutest(disp_loc, permutations = 999)
+  disp_loc_test <- permutest_s(disp_loc, permutations = 999)
   cat("\n--- PERMDISP by Locality ---\n"); print(disp_loc_test)
   
   # Guardar stats
@@ -643,7 +653,7 @@ run_condition_stats <- function(sp_label) {
   
   # ---- Betadisper por Condición --------------------------------
   disp_cond     <- betadisper(jac, sd_sp[[cond_col]])
-  disp_test     <- permutest(disp_cond, permutations = 999)
+  disp_test     <- permutest_s(disp_cond, permutations = 999)
   cat("\n--- PERMDISP by Condition ---\n")
   print(disp_test)
   
@@ -772,8 +782,8 @@ safe_permanova_taxon <- function(ps_sub, sp_name, taxrank, tax_i,
   }
   
   # Mínimo 2 OTUs
-  if (ncol(otu_t) < 2) {
-    cat("    [SKIP]", tax_i, ": <2 OTUs\n"); return(NULL)
+  if (ncol(otu_t) < 4) {
+    cat("    [SKIP]", tax_i, ": <4 OTUs\n"); return(NULL)
   }
   
   # Eliminar filas vacías tras filtrar OTUs
@@ -850,13 +860,13 @@ safe_permanova_taxon <- function(ps_sub, sp_name, taxrank, tax_i,
   # ---- Betadisper ----
   disp_cond <- tryCatch({
     bd <- betadisper(jac, cond_v)
-    pt <- permutest(bd, permutations = 999)
+    pt <- permutest_s(bd, permutations = 999)
     list(F = round(pt$tab$F[1], 3), p = round(pt$tab$`Pr(>F)`[1], 3))
   }, error = function(e) list(F = NA, p = NA))
   
   disp_loc <- tryCatch({
     bd <- betadisper(jac, loc_v)
-    pt <- permutest(bd, permutations = 999)
+    pt <- permutest_s(bd, permutations = 999)
     list(F = round(pt$tab$F[1], 3), p = round(pt$tab$`Pr(>F)`[1], 3))
   }, error = function(e) list(F = NA, p = NA))
   
@@ -982,8 +992,8 @@ run_taxon_permanova <- function(ps_sp, sp_name, sp_label,
 sink(file.path(OUTDIR, "Stats_taxon_PERMANOVA.txt"))
 cat("=== PERMANOVA Jaccard P/A por Phylum y Family ===\n")
 cat("Model: adonis2(Jaccard(P/A) ~ Locality)\n")
-cat("Sin rarefacción — datos originales\n")
-cat("Filtros: >=4 muestras (10%), >=2 OTUs presentes en >=2 muestras\n")
+cat("Rarefied to", min_reads, "reads (same object as alpha/beta analyses)\n")
+cat("Filtros: >=4 muestras (10%), >=4 OTUs presentes en >=2 muestras\n")
 cat("FDR correction dentro de cada nivel taxonomico y especie\n")
 cat("Betadisper por Condition y Locality\n")
 cat("Fecha:", format(Sys.time()), "\n\n")
@@ -997,7 +1007,10 @@ all_results_taxon <- list()
  
 run_taxon_permanova_species <- function(sp_label) {
   
-  ps_sp   <- ps_list[[sp_label]]
+  # Rarefied to min_reads with the same seed as alpha/beta (samples < min_reads dropped)
+  ps_sp   <- rarefy_even_depth(ps_list[[sp_label]], sample.size = min_reads,
+                               rngseed = 42, replace = FALSE,
+                               trimOTUs = TRUE, verbose = FALSE)
   sp_name <- sp_names[[sp_label]]
   
   cat("\n\n========================================\n")
@@ -1053,6 +1066,19 @@ cat("\n=== 7. IndVal.g (P/A) ===\n")
  
 OUTDIR7 <- file.path(OUTDIR, "IndVal")
 dir.create(OUTDIR7, showWarnings = FALSE)
+
+## Curated taxonomy (BLAST/WoRMS) from Supplementary Table S1, by OTU_ID.
+## If the file is missing, the pipeline taxonomy is used.
+S1_FILE <- "Supplementary_OTU_table.xlsx"
+tax_S1 <- NULL
+if (file.exists(S1_FILE)) {
+  tax_S1 <- readxl::read_excel(S1_FILE, sheet = "OTU_table") %>%
+    select(OTU = OTU_ID, Phylum, Class, Order, Family, Genus, Species) %>%
+    mutate(across(-OTU, ~ ifelse(.x %in% c("", "NA"), NA, .x)))
+  cat("Curated S1 taxonomy loaded:", nrow(tax_S1), "OTUs\n")
+} else {
+  cat("AVISO:", S1_FILE, "not found. Using pipeline taxonomy for labels.\n")
+}
  
 ## Paleta localidades
 pal_loc_dot <- c(
@@ -1140,13 +1166,26 @@ run_indval_PA <- function(ps_sp, sp_name, sp_label,
       )
     ) %>%
     left_join(tax_r %>% rownames_to_column("OTU"), by = "OTU") %>%
-    left_join(indval_AB, by = "OTU") %>%
+    left_join(indval_AB, by = "OTU")
+
+  # Keep pipeline names, then overwrite with curated S1 names where available
+  ind_df <- ind_df %>%
+    mutate(Genus_pipeline = Genus, Species_pipeline = Species)
+  if (!is.null(tax_S1)) {
+    ind_df <- ind_df %>%
+      rows_update(tax_S1 %>% filter(OTU %in% ind_df$OTU), by = "OTU",
+                  unmatched = "ignore")
+  }
+
+  ind_df <- ind_df %>%
     mutate(
       taxon_label = case_when(
         !is.na(Species) & Species != "" ~ Species,
         !is.na(Genus)   & Genus   != "" ~ paste0(Genus, " sp."),
-        !is.na(Family)  & Family  != "" ~ paste0(Family, " (Family)"),
-        !is.na(Phylum)  & Phylum  != "" ~ paste0(Phylum, " (Phylum)"),
+        !is.na(Family)  & Family  != "" ~ paste0(Family, " sp."),
+        !is.na(Order)   & Order   != "" ~ paste0(Order, " sp."),
+        !is.na(Class)   & Class   != "" ~ paste0(Class, " sp."),
+        !is.na(Phylum)  & Phylum  != "" ~ paste0(Phylum, " sp."),
         TRUE ~ OTU
       )
     )
@@ -1474,5 +1513,48 @@ cat("  Sig05:", sum(ind_par$p_adj < 0.05 &
 cat("  Sig10:", sum(ind_par$p_adj < 0.10 &
                       ind_par$assoc_group %in% c("Ambient","Vent"), na.rm=TRUE), "\n")
  
+
+## ================================================================
+
+
+## ---- 7b. IndVal ROBUSTNESS ACROSS RAREFACTIONS ----------------------
+
+N_RARE <- 100
+indval_once <- function(ps_sp, seed, nperm = 999) {
+  ps_r <- rarefy_even_depth(ps_sp, sample.size = min_reads, rngseed = seed,
+                            replace = FALSE, trimOTUs = TRUE, verbose = FALSE)
+  otu_r <- as(otu_table(ps_r), "matrix"); if (!taxa_are_rows(ps_r)) otu_r <- t(otu_r)
+  pa  <- (otu_r > 0) * 1; pa <- pa[rowSums(pa) >= 2, , drop = FALSE]
+  loc <- as.factor(as.data.frame(sample_data(ps_r))[[loc_col]])
+  set.seed(seed)
+  ir <- multipatt(t(pa), cluster = loc, func = "IndVal.g", control = how(nperm = nperm))
+  data.frame(OTU = rownames(ir$sign), stat = ir$sign$stat, index = ir$sign$index,
+             p_adj = p.adjust(ir$sign$p.value, method = "fdr"))
+}
+robust_indval <- function(ps_sp, sp_label, res_main) {
+  main <- res_main$ind_df %>%
+    select(OTU, index_main = index, taxon_label, Phylum, Family, assoc_group,
+           starts_with("s."))
+  runs <- bind_rows(lapply(seq_len(N_RARE), function(i) {
+    if (i %% 10 == 0) cat(sp_label, "rarefaction", i, "\n")
+    indval_once(ps_sp, seed = i) }))
+  rob <- runs %>% inner_join(main, by = "OTU") %>%
+    group_by(OTU, taxon_label, Phylum, Family, assoc_group) %>%
+    summarise(pct_sig05     = 100 * sum(p_adj < 0.05 & index == index_main) / N_RARE,
+              median_IndVal = round(median(stat), 3),
+              median_p_adj  = round(median(p_adj), 4), .groups = "drop") %>%
+    left_join(main %>% select(OTU, starts_with("s.")), by = "OTU") %>%
+    arrange(median_p_adj)
+  write.csv(rob, file.path(OUTDIR7, paste0("Stats_IndVal_robustness_", sp_label, ".csv")),
+            row.names = FALSE)
+  write.csv(rob %>% filter(median_p_adj < 0.05, assoc_group %in% c("Ambient", "Vent")),
+            file.path(OUTDIR7, paste0("Stats_IndVal_robust_sig05_", sp_label, ".csv")),
+            row.names = FALSE)
+  rob
+}
+rob_arb <- robust_indval(ps_arb, "Arbacia_lixula", res_arb)
+rob_par <- robust_indval(ps_par, "Paracentrotus_lividus", res_par)
+cat("Robust IndVal written to", OUTDIR7, "\n")
+
 
 ## ================================================================
