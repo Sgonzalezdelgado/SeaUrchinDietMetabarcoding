@@ -5,7 +5,6 @@
 |---|---|
 | `precuration.R` | Eukaryote restriction and rule-based dietary curation (documented steps). Writes the removal log and the supplementary OTU table and collapses OTUs to species level. |
 | `water_microdecon.R` | **Main seawater decontamination.** Uses the seawater samples (tissue `W`) as blanks in microDecon (McKnight et al. 2019, *Environmental DNA* 1:14–25). |
-| `water_overlap_filter.R` | Sensitivity analysis only (`MODE = "presence"` removes every OTU found in the paired water). Not used for the main results. |
 
 ## Input
 - `phyloseq_OTU97_LULU_e20.rds` (from step 05; includes faeces, stomachs and seawater)
